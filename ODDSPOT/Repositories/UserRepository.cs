@@ -1,71 +1,75 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using static ODDSPOT.Repositories.UserRepository;
 
 namespace ODDSPOT.Repositories
 {
     public class UserRepository : IUserRepository
     {
-            private readonly AppDbContext dbContext;
+        private readonly AppDbContext dbContext;
 
-            public UserRepository(AppDbContext dbContext)
-            {
-                this.dbContext = dbContext;
-            }
+        public UserRepository(AppDbContext dbContext)
+        {
+            this.dbContext = dbContext;
+        }
 
-            public async Task<IEnumerable<User>> GetUsers()
-            {
-                return await dbContext.Users.ToListAsync();
-            }
+        public async Task<IEnumerable<User>> GetUsers()
+        {
+            return await dbContext.Users.ToListAsync();
+        }
 
-            public async Task<User> GetUser(int userId)
-            {
-                return await dbContext.Users
-                    .FirstOrDefaultAsync(e => e.user_id == userId);
-            }
+        public async Task<User> GetUser(int userId)
+        {
+            return await dbContext.Users
+                .FirstOrDefaultAsync(e => e.user_id == userId);
+        }
 
-            public async Task<User> AddUser(User user)
+        public async Task<User> AddUser(User user)
+        {
+            var result = await dbContext.Users.AddAsync(user);
+            await dbContext.SaveChangesAsync();
+            return result.Entity;
+        }
+
+        public async Task<User> UpdateUser(User user)
+        {
+            var result = await dbContext.Users
+                    .FirstOrDefaultAsync(e => e.user_id == user.user_id);
+
+            if (result != null)
             {
-                var result = await dbContext.Users.AddAsync(user);
+                result.name = user.name;
+                result.password = user.password;
+                result.email_address = user.email_address;
+                result.Favorite_Leagues = user.Favorite_Leagues;
+
                 await dbContext.SaveChangesAsync();
-                return result.Entity;
+
+                return result;
             }
 
-            public async Task<User> UpdateUser(User user)
-            {
-                var result = await dbContext.Users
-                        .FirstOrDefaultAsync(e => e.user_id == user.user_id);
+            return null;
+        }
 
-                if (result != null)
-                {
-                    result.name = user.name;
-                    result.password = user.password;
-                    result.email_address = user.email_address;
-                    result.FavoriteLeagues = user.FavoriteLeagues;
+        public async void DeleteUser(int userId)
+        {
+            throw new NotImplementedException();
+        }
 
-                    await dbContext.SaveChangesAsync();
+        public async Task<IEnumerable<FavoriteLeague>> GetFavoriteLeagues()
+        {
+            throw new NotImplementedException();
+        }
 
-                    return result;
-                }
+        public async Task<IEnumerable<FavoriteLeague>> UpdateFavoriteLeagues(IEnumerable<FavoriteLeague> favoriteLeague)
+        {
+            throw new NotImplementedException();
+        }
 
-                return null;
-            }
+        public async Task<FavoriteLeague> AddFavoriteLeague(FavoriteLeague favoriteLeague)
+        {
+            var result = await dbContext.Favorite_Leagues.AddAsync(favoriteLeague);
+            await dbContext.SaveChangesAsync();
+            return result.Entity;
+        }
 
-            public async void DeleteUser(int userId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public async Task<IEnumerable<League>> GetFavoriteLeagues()
-            {
-                throw new NotImplementedException();
-            }
-
-            public async Task<IEnumerable<League>> UpdateFavoriteLeagues()
-            {
-                throw new NotImplementedException();
-            }
     }
 }

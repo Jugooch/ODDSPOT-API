@@ -105,7 +105,7 @@ namespace ODDSPOT.Controllers
         [HttpPut("{id}/favoriteLeagues")]
         public async Task<IActionResult> UpdateFavoriteLeagues(int id, List<League> favoriteLeagues)
         {
-            var user = await _context.Users.Include(u => u.FavoriteLeagues).FirstOrDefaultAsync(u => u.user_id == id);
+            var user = await _context.Users.Include(u => u.Favorite_Leagues).FirstOrDefaultAsync(u => u.user_id == id);
 
             if (user == null)
             {
@@ -113,10 +113,10 @@ namespace ODDSPOT.Controllers
             }
 
             // Clear existing favorite leagues for the user
-            user.FavoriteLeagues.Clear();
+            user.Favorite_Leagues.Clear();
 
             // Add new favorite leagues
-            user.FavoriteLeagues.AddRange(favoriteLeagues);
+            user.Favorite_Leagues.AddRange(favoriteLeagues);
 
             try
             {
@@ -140,6 +140,32 @@ namespace ODDSPOT.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.user_id == id);
+        }
+
+
+        // post league id to user
+        // POST: api/Users
+        [HttpPost("{id}/favoriteLeagues")]
+        public async Task<IActionResult> InsertNewFavoriteLeagues(FavoriteLeague league_id)
+        {
+            _context.Favorite_Leagues.Add(league_id);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetUser), new { id = league_id.user_id }, league_id);
+
+        }
+
+        [HttpGet("{id}/favoriteLeagues/{league_id}")]
+        public async Task<ActionResult<FavoriteLeague>> GetFavoriteLeague(int league_id)
+        {
+            var league = await _context.Favorite_Leagues.FindAsync(league_id);
+
+            if (league == null)
+            {
+                return NotFound();
+            }
+
+            return league;
         }
     }
 }
