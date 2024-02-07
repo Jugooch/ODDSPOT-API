@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ODDSPOT.Controllers
 {
@@ -6,9 +7,9 @@ namespace ODDSPOT.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly YourDbContext _context; // Replace YourDbContext with actual DbContext
+        private readonly AppDbContext _context; // Replace YourDbContext with actual DbContext
 
-        public UsersController(YourDbContext context)
+        public UsersController(AppDbContext context)
         {
             _context = context;
         }
@@ -41,14 +42,14 @@ namespace ODDSPOT.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, user);
+            return CreatedAtAction(nameof(GetUser), new { id = user.user_id }, user);
         }
 
         // PUT: api/Users/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, User updatedUser)
         {
-            if (id != updatedUser.UserId)
+            if (id != updatedUser.user_id)
             {
                 return BadRequest();
             }
@@ -61,9 +62,9 @@ namespace ODDSPOT.Controllers
             }
 
             // Update user properties
-            user.Name = updatedUser.Name;
-            user.Password = updatedUser.Password;
-            user.EmailAddress = updatedUser.EmailAddress;
+            user.name = updatedUser.name;
+            user.password = updatedUser.password;
+            user.email_address = updatedUser.email_address;
 
             try
             {
@@ -104,7 +105,7 @@ namespace ODDSPOT.Controllers
         [HttpPut("{id}/favoriteLeagues")]
         public async Task<IActionResult> UpdateFavoriteLeagues(int id, List<League> favoriteLeagues)
         {
-            var user = await _context.Users.Include(u => u.FavoriteLeagues).FirstOrDefaultAsync(u => u.UserId == id);
+            var user = await _context.Users.Include(u => u.FavoriteLeagues).FirstOrDefaultAsync(u => u.user_id == id);
 
             if (user == null)
             {
@@ -138,7 +139,7 @@ namespace ODDSPOT.Controllers
 
         private bool UserExists(int id)
         {
-            return _context.Users.Any(e => e.UserId == id);
+            return _context.Users.Any(e => e.user_id == id);
         }
     }
 }
