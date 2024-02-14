@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Mail;
 
@@ -64,15 +65,16 @@ namespace ODDSPOT.Controllers
         }
         private void SendConfirmationEmail(string email, string confirmationCode)
         {
-            var fromAddress = new MailAddress("oddspotsportshub@gmail.com", "OddSpot");
+            var fromAddress = new MailAddress(Environment.GetEnvironmentVariable("SMTP_EMAIL"), "OddSpot");
             var toAddress = new MailAddress(email);
-            const string fromPassword = "Oddspot1234!";
+            string pass = Environment.GetEnvironmentVariable("SMTP_PASSWORD"); ;
+            string fromPassword = pass;
             const string subject = "Your Oddspot Confirmation Code!";
             string body = $"Your confirmation code is: <br/><h1>{confirmationCode}</h1>";
 
             var smtp = new SmtpClient
             {
-                Host = "smtp.gmail.com",
+                Host = Environment.GetEnvironmentVariable("SMTP_HOST"),
                 Port = 587,
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
