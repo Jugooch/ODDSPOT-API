@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Mail;
 
 namespace ODDSPOT.Controllers
 {
@@ -7,7 +8,7 @@ namespace ODDSPOT.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly AppDbContext _context; // Replace YourDbContext with actual DbContext
+        private readonly AppDbContext _context;
 
         public UsersController(AppDbContext context)
         {
@@ -44,6 +45,64 @@ namespace ODDSPOT.Controllers
 
             return CreatedAtAction(nameof(GetUser), new { id = user.user_id }, user);
         }
+
+        // POST: api/verify
+        [HttpPost("/verify")]
+        public async Task<ActionResult<string>> ConfirmEmail(string email)
+        {
+            // Generate a 6-digit confirmation code
+            var random = new Random();
+            var confirmationCode = random.Next(100000, 999999).ToString();
+
+            _context.UserConfirmations.Add(new UserConfirmations(email, confirmationCode));
+            await _context.SaveChangesAsync();
+
+
+            SendConfirmationEmail(email, confirmationCode);
+
+            return confirmationCode;
+        }
+        private void SendConfirmationEmail(string email, string confirmationCode)
+        {
+            var fromAddress = new MailAddress("oddspotsportshub@gmail.com", "OddSpot");
+            var toAddress = new MailAddress(email);
+            const string fromPassword = "Oddspot1234!";
+            const string subject = "Your Oddspot Confirmation Code!";
+            string body = $"Your confirmation code is: <br/><h1>{confirmationCode}</h1>";
+
+            var smtp = new SmtpClient
+            {
+                Host = "smtp.gmail.com",
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = new System.Net.NetworkCredential(fromAddress.Address, fromPassword)
+            };
+            using (var message = new MailMessage(fromAddress, toAddress)
+            {
+                Subject = subject,
+                Body = body
+            })
+            {
+                smtp.Send(message);
+            }
+        }
+
+
+        [HttpGet("/verify")]
+        public async Task<ActionResult<string>> VerifyEmail(string email)
+        {
+            var code = await _context.UserConfirmations.FirstOrDefaultAsync(e => e.email_address == email);
+
+            if (code == null)
+            {
+                return NotFound("Code not found.");
+            }
+
+            return code.confirmation_code;
+        }
+
 
         // PUT: api/Users/5
         [HttpPut("{id}")]
@@ -103,20 +162,22 @@ namespace ODDSPOT.Controllers
         }
 
         [HttpPut("{id}/favoriteLeagues")]
-        public async Task<IActionResult> UpdateFavoriteLeagues(int id, List<League> favoriteLeagues)
+        public async Task<IActionResult> UpdateFavoriteLeagues(int id, List<FavoriteLeague> favoriteLeagues)
         {
-            var user = await _context.Users.Include(u => u.Favorite_Leagues).FirstOrDefaultAsync(u => u.user_id == id);
+            if (id != favoriteLeagues.ElementAt(0).user_id)
+            {
+                return BadRequest();
+            }
+
+            var user = await _context.Users.FindAsync(id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            // Clear existing favorite leagues for the user
-            user.Favorite_Leagues.Clear();
-
-            // Add new favorite leagues
-            user.Favorite_Leagues.AddRange(favoriteLeagues);
+            _context.Favorite_Leagues.RemoveRange(_context.Favorite_Leagues.Where(e => e.user_id == id).ToList());
+            _context.Favorite_Leagues.AddRange(favoriteLeagues);
 
             try
             {
@@ -130,6 +191,7 @@ namespace ODDSPOT.Controllers
                 }
                 else
                 {
+                    Console.WriteLine("User found, but bad request...");
                     throw;
                 }
             }
@@ -146,13 +208,20 @@ namespace ODDSPOT.Controllers
         // post league id to user
         // POST: api/Users
         [HttpPost("{id}/favoriteLeagues")]
-        public async Task<IActionResult> InsertNewFavoriteLeagues(FavoriteLeague league_id)
+        public async Task<IActionResult> InsertNewFavoriteLeagues(FavoriteLeague league)
         {
-            _context.Favorite_Leagues.Add(league_id);
+            _context.Favorite_Leagues.Add(league);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetUser), new { id = league_id.user_id }, league_id);
+            return CreatedAtAction(nameof(GetUser), new { id = league.user_id }, league);
 
+        }
+
+        [HttpGet("{id}/favoriteLeagues")]
+        public async Task<ActionResult<IEnumerable<FavoriteLeague>>> GetFavoriteLeagues(int id)
+        {
+            var leagues = await _context.Favorite_Leagues.Where(e => e.user_id == id).ToListAsync();
+            return leagues;
         }
 
         [HttpGet("{id}/favoriteLeagues/{league_id}")]

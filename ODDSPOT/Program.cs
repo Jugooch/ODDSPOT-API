@@ -13,7 +13,17 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DBConnection"), ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DBConnection"))));
 
-builder.Services.AddScoped<IUserRepository, UserRepository>(); // Add this line to register your repository
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -21,6 +31,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 app.UseSwagger();
+app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

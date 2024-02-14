@@ -10,6 +10,7 @@ namespace ODDSPOT
         public DbSet<User> Users { get; set; }
         public DbSet<League> Leagues { get; set; }
         public DbSet<FavoriteLeague> Favorite_Leagues { get; set; }
+        public DbSet<UserConfirmations> UserConfirmations { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -24,7 +25,6 @@ namespace ODDSPOT
         public string name { get; set; }
         public string password { get; set; }
         public string email_address { get; set; }
-        public List<League> Favorite_Leagues { get; set; } = new List<League>();
     }
 
     public class League
@@ -39,15 +39,24 @@ namespace ODDSPOT
 
     public class FavoriteLeague
     {
-        public FavoriteLeague(int league_id, int user_id)
-        {
-            league_id = league_id;
-            user_id = user_id;
-        }
         [Key]
         public int id { get; set; }
         public int league_id { get; set; }
         public int user_id { get; set; }
+    }
+
+    public class UserConfirmations
+    {
+        public UserConfirmations(string email_address, string confirmation_code)
+        {
+            this.email_address = email_address;
+            this.confirmation_code = confirmation_code;
+        }
+
+        [Key]
+        public int id { get; set; }
+        public string email_address { get; set; }
+        public string confirmation_code { get; set; }
     }
 
 }
