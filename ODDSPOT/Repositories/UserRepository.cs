@@ -1,6 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
-using System.Net.Mail;
+﻿using System.Net.Mail;
+using Microsoft.EntityFrameworkCore;
 
 namespace ODDSPOT.Repositories
 {
@@ -29,8 +28,8 @@ namespace ODDSPOT.Repositories
             var random = new Random();
             var confirmationCode = random.Next(100000, 999999).ToString();
 
-                SendConfirmationEmail(email, confirmationCode);
-                return await dbContext.UserConfirmations.FirstOrDefaultAsync(e => e.email_address == email);
+            SendConfirmationEmail(email, confirmationCode);
+            return await dbContext.UserConfirmations.FirstOrDefaultAsync(e => e.email_address == email);
         }
 
         private void SendConfirmationEmail(string email, string confirmationCode)

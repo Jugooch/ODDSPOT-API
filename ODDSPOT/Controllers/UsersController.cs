@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Net.Mail;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Mail;
 
 namespace ODDSPOT.Controllers
 {
@@ -235,6 +234,22 @@ namespace ODDSPOT.Controllers
             {
                 return NotFound();
             }
+
+            return league;
+        }
+
+        [HttpGet("/leagues")]
+        public async Task<ActionResult<IEnumerable<League>>> GetLeagues()
+        {
+            var leagues = await _context.Leagues.ToListAsync();
+
+            return leagues;
+        }
+
+        [HttpGet("/leagues/{id}")]
+        public async Task<ActionResult<League>> GetLeagueById(int id)
+        {
+            var league = await _context.Leagues.FindAsync(id);
 
             return league;
         }
