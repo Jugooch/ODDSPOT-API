@@ -31,6 +31,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 app.UseSwagger();
+//allow access from vue app
 app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
